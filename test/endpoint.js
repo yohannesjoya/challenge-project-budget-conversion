@@ -228,6 +228,64 @@ test('POST /api/project/budget tests success', function (t) {
   t.end()
 })
 
+test('PUT /api/project/budget/:id tests with validation error', function (t) {
+  t.test('Dto Validation failure ', function (st) {
+    const opts = { encoding: 'json', method: 'PUT', headers: { 'Content-Type': 'application/json' } }
+    const invalidData = {
+      projectId: 20000001,
+      projectName: 'Updated Project Name',
+      year: 2085,
+      currency: 'EUR',
+      initialBudgetLocal: 316974.5,
+      budgetUsd: 233724.23,
+      initialScheduleEstimateMonths: 13,
+      adjustedScheduleEstimateMonths: 12,
+      contingencyRate: 2.19,
+      escalationRate: 3.46,
+      finalBudgetUsd: 247106.75
+    }
+
+    const req = servertest(server, '/api/project/budget/1', opts, function (err, res) {
+      st.error(err, 'No error')
+      st.equal(res.statusCode, 400, 'Should return 400')
+      st.equal(res.body.errors.length, 1, 'Should return 2 errors')
+      st.end()
+    })
+
+    req.write(JSON.stringify(invalidData))
+    req.end()
+  })
+  t.end()
+})
+
+test('PUT /api/project/budget/:id tests success', function (t) {
+  t.test('Successful update of project budget', function (st) {
+    const opts = { encoding: 'json', method: 'PUT', headers: { 'Content-Type': 'application/json' } }
+    const updatedProject = {
+      projectName: 'Updated Project Name',
+      year: 2085,
+      currency: 'EUR',
+      initialBudgetLocal: 316974.5,
+      budgetUsd: 233724.23,
+      initialScheduleEstimateMonths: 13,
+      adjustedScheduleEstimateMonths: 12,
+      contingencyRate: 2.19,
+      escalationRate: 3.46,
+      finalBudgetUsd: 247106.75
+    }
+
+    const req = servertest(server, '/api/project/budget/20202', opts, function (err, res) {
+      st.error(err, 'No error')
+      st.equal(res.statusCode, 201, 'Should return 201')
+      st.ok(res.body.success, 'Should return success: true')
+      st.end()
+    })
+    req.write(JSON.stringify(updatedProject))
+    req.end()
+  })
+  t.end()
+})
+
 test('Teardown test database', async function (t) {
   const dropTableSql = 'DROP TABLE project'
   try {
