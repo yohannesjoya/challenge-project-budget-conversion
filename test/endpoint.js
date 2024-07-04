@@ -108,6 +108,55 @@ test('GET /api/project/budget/:id tests Not Found', function (t) {
   t.end()
 })
 
+test('POST /api/project/budget/currency tests with USD', function (t) {
+  t.test('Successful get by year and name in USD', function (st) {
+    const opts = { encoding: 'json', method: 'POST', headers: { 'Content-Type': 'application/json' } }
+    const req = servertest(server, '/api/project/budget/currency', opts, function (err, res) {
+      st.error(err, 'No error')
+      st.equal(res.statusCode, 200, 'Should return 200')
+      st.ok(res.body.success, 'Should return success: true')
+      st.equal(res.body.data[0].projectName, 'New Project 1', 'Project name should match')
+      st.end()
+    })
+    req.write(JSON.stringify({ year: 2005, projectName: 'New Project 1', currency: 'USD' }))
+    req.end()
+  })
+  t.end()
+})
+
+test('POST /api/project/budget/currency tests with Non-USD', function (t) {
+  t.test('Successful retrieval by year and name in non-USD currency', function (st) {
+    const opts = { encoding: 'json', method: 'POST', headers: { 'Content-Type': 'application/json' } }
+    const req = servertest(server, '/api/project/budget/currency', opts, function (err, res) {
+      st.error(err, 'No error')
+      st.equal(res.statusCode, 200, 'Should return 200')
+      st.ok(res.body.success, 'Should return success: true')
+      st.equal(res.body.data[0].projectName, 'New Project 2', 'Project name should match')
+      st.ok(res.body.data[0].finalBudgetEUR, 'Should have finalBudgetEUR: field')
+      st.end()
+    })
+    req.write(JSON.stringify({ year: 2000, projectName: 'New Project 2', currency: 'EUR' }))
+    req.end()
+  })
+  t.end()
+})
+
+test('POST /api/project/budget/currency tests NotFound', function (t) {
+  t.test('Project not found', function (st) {
+    const opts = { encoding: 'json', method: 'POST', headers: { 'Content-Type': 'application/json' } }
+    const req = servertest(server, '/api/project/budget/currency', opts, function (err, res) {
+      console.log()
+      st.error(err, 'No error')
+      st.equal(res.statusCode, 404, 'Should return 404')
+      st.equal(res.body.success, false, 'Should return success: false')
+      st.end()
+    })
+    req.write(JSON.stringify({ year: 2024, projectName: 'Nonexistent Project', currency: 'USD' }))
+    req.end()
+  })
+  t.end()
+})
+
 test('Teardown test database', async function (t) {
   const dropTableSql = 'DROP TABLE project'
   try {
