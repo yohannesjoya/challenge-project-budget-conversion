@@ -108,6 +108,19 @@ test('GET /api/project/budget/:id tests Not Found', function (t) {
   t.end()
 })
 
+test('DELETE /api/project/budget/:id tests', function (t) {
+  t.test('Successful deletion of project budget', function (st) {
+    const opts = { encoding: 'json', method: 'DELETE' }
+    servertest(server, '/api/project/budget/2', opts, function (err, res) {
+      st.error(err, 'No error')
+      st.equal(res.statusCode, 200, 'Should return 200')
+      st.equal(res.body.success, true, 'Should return success: true')
+      st.end()
+    })
+  })
+  t.end()
+})
+
 test('POST /api/project/budget/currency tests with USD', function (t) {
   t.test('Successful get by year and name in USD', function (st) {
     const opts = { encoding: 'json', method: 'POST', headers: { 'Content-Type': 'application/json' } }
