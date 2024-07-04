@@ -82,6 +82,32 @@ test('Setup test database', async function (t) {
   }
 })
 
+test('GET /api/project/budget/:id tests', function (t) {
+  t.test('Successful get by ID', function (st) {
+    const opts = { encoding: 'json', method: 'GET' }
+    servertest(server, '/api/project/budget/1', opts, async function (err, res) {
+      st.error(err, 'No error')
+      st.equal(res.statusCode, 200, 'Should return 200')
+      st.equal(res.body.projectName, 'New Project 1', 'Project name should match')
+      st.equal(res.body.year, 2005, 'Year should match')
+      st.end()
+    })
+  })
+  t.end()
+})
+
+test('GET /api/project/budget/:id tests Not Found', function (t) {
+  t.test('Project not found', function (st) {
+    const opts = { encoding: 'json', method: 'GET' }
+    servertest(server, '/api/project/budget/999', opts, function (err, res) {
+      st.error(err, 'No error')
+      st.equal(res.statusCode, 404, 'Should return 404')
+      st.end()
+    })
+  })
+  t.end()
+})
+
 test('Teardown test database', async function (t) {
   const dropTableSql = 'DROP TABLE project'
   try {
