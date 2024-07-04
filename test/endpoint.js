@@ -5,8 +5,13 @@ const test = require('tape')
 const servertest = require('servertest')
 const app = require('../lib/app')
 const db = require('../lib/db')
+const { generateRequestOpts } = require('../lib/utils')
 
 const server = http.createServer(app)
+const getRequestOpts = generateRequestOpts('GET')
+const postRequestOpts = generateRequestOpts('POST', true)
+const deleteRequestOpts = generateRequestOpts('DELETE', true)
+const putRequestOpts = generateRequestOpts('PUT', true)
 
 const createTableSql = `
     CREATE TABLE IF NOT EXISTS project (
@@ -84,8 +89,7 @@ test('Setup test database', async function (t) {
 
 test('GET /api/project/budget/:id tests', function (t) {
   t.test('Successful get by ID', function (st) {
-    const opts = { encoding: 'json', method: 'GET' }
-    servertest(server, '/api/project/budget/1', opts, async function (err, res) {
+    servertest(server, '/api/project/budget/1', generateRequestOpts('GET'), async function (err, res) {
       st.error(err, 'No error')
       st.equal(res.statusCode, 200, 'Should return 200')
       st.equal(res.body.projectName, 'New Project 1', 'Project name should match')
@@ -98,8 +102,7 @@ test('GET /api/project/budget/:id tests', function (t) {
 
 test('GET /api/project/budget/:id tests Not Found', function (t) {
   t.test('Project not found', function (st) {
-    const opts = { encoding: 'json', method: 'GET' }
-    servertest(server, '/api/project/budget/999', opts, function (err, res) {
+    servertest(server, '/api/project/budget/999', getRequestOpts, function (err, res) {
       st.error(err, 'No error')
       st.equal(res.statusCode, 404, 'Should return 404')
       st.end()
@@ -110,8 +113,7 @@ test('GET /api/project/budget/:id tests Not Found', function (t) {
 
 test('DELETE /api/project/budget/:id tests', function (t) {
   t.test('Successful deletion of project budget', function (st) {
-    const opts = { encoding: 'json', method: 'DELETE' }
-    servertest(server, '/api/project/budget/2', opts, function (err, res) {
+    servertest(server, '/api/project/budget/2', deleteRequestOpts, function (err, res) {
       st.error(err, 'No error')
       st.equal(res.statusCode, 200, 'Should return 200')
       st.equal(res.body.success, true, 'Should return success: true')
@@ -123,8 +125,7 @@ test('DELETE /api/project/budget/:id tests', function (t) {
 
 test('POST /api/project/budget/currency tests with USD', function (t) {
   t.test('Successful get by year and name in USD', function (st) {
-    const opts = { encoding: 'json', method: 'POST', headers: { 'Content-Type': 'application/json' } }
-    const req = servertest(server, '/api/project/budget/currency', opts, function (err, res) {
+    const req = servertest(server, '/api/project/budget/currency', postRequestOpts, function (err, res) {
       st.error(err, 'No error')
       st.equal(res.statusCode, 200, 'Should return 200')
       st.ok(res.body.success, 'Should return success: true')
@@ -139,8 +140,7 @@ test('POST /api/project/budget/currency tests with USD', function (t) {
 
 test('POST /api/project/budget/currency tests with Non-USD', function (t) {
   t.test('Successful retrieval by year and name in non-USD currency', function (st) {
-    const opts = { encoding: 'json', method: 'POST', headers: { 'Content-Type': 'application/json' } }
-    const req = servertest(server, '/api/project/budget/currency', opts, function (err, res) {
+    const req = servertest(server, '/api/project/budget/currency', postRequestOpts, function (err, res) {
       st.error(err, 'No error')
       st.equal(res.statusCode, 200, 'Should return 200')
       st.ok(res.body.success, 'Should return success: true')
@@ -156,8 +156,7 @@ test('POST /api/project/budget/currency tests with Non-USD', function (t) {
 
 test('POST /api/project/budget/currency tests NotFound', function (t) {
   t.test('Project not found', function (st) {
-    const opts = { encoding: 'json', method: 'POST', headers: { 'Content-Type': 'application/json' } }
-    const req = servertest(server, '/api/project/budget/currency', opts, function (err, res) {
+    const req = servertest(server, '/api/project/budget/currency', postRequestOpts, function (err, res) {
       console.log()
       st.error(err, 'No error')
       st.equal(res.statusCode, 404, 'Should return 404')
@@ -172,7 +171,6 @@ test('POST /api/project/budget/currency tests NotFound', function (t) {
 
 test('POST /api/project/budget tests with validation error', function (t) {
   t.test('Dto Validation Error', function (st) {
-    const opts = { encoding: 'json', method: 'POST', headers: { 'Content-Type': 'application/json' } }
     const invalidData = {
       projectName: 'New Project 3',
       year: 'kebe',
@@ -186,7 +184,7 @@ test('POST /api/project/budget tests with validation error', function (t) {
       finalBudgetUsd: 405.01
     }
 
-    const req = servertest(server, '/api/project/budget', opts, function (err, res) {
+    const req = servertest(server, '/api/project/budget', postRequestOpts, function (err, res) {
       st.error(err, 'No error')
       st.equal(res.statusCode, 400, 'Should return 400')
       st.equal(res.body.errors.length, 2, 'Should return 2 errors')
@@ -201,7 +199,6 @@ test('POST /api/project/budget tests with validation error', function (t) {
 
 test('POST /api/project/budget tests success', function (t) {
   t.test('Successful addition of project budget', function (st) {
-    const opts = { encoding: 'json', method: 'POST', headers: { 'Content-Type': 'application/json' } }
     const newProject =
     {
       projectId: 20202,
@@ -216,7 +213,7 @@ test('POST /api/project/budget tests success', function (t) {
       escalationRate: 3.46,
       finalBudgetUsd: 247106.75
     }
-    const req = servertest(server, '/api/project/budget', opts, function (err, res) {
+    const req = servertest(server, '/api/project/budget', postRequestOpts, function (err, res) {
       st.error(err, 'No error')
       st.equal(res.statusCode, 201, 'Should return 201')
       st.ok(res.body.success, 'Should return success: true')
@@ -230,7 +227,6 @@ test('POST /api/project/budget tests success', function (t) {
 
 test('PUT /api/project/budget/:id tests with validation error', function (t) {
   t.test('Dto Validation failure ', function (st) {
-    const opts = { encoding: 'json', method: 'PUT', headers: { 'Content-Type': 'application/json' } }
     const invalidData = {
       projectId: 20000001,
       projectName: 'Updated Project Name',
@@ -245,7 +241,7 @@ test('PUT /api/project/budget/:id tests with validation error', function (t) {
       finalBudgetUsd: 247106.75
     }
 
-    const req = servertest(server, '/api/project/budget/1', opts, function (err, res) {
+    const req = servertest(server, '/api/project/budget/1', putRequestOpts, function (err, res) {
       st.error(err, 'No error')
       st.equal(res.statusCode, 400, 'Should return 400')
       st.equal(res.body.errors.length, 1, 'Should return 2 errors')
@@ -260,7 +256,6 @@ test('PUT /api/project/budget/:id tests with validation error', function (t) {
 
 test('PUT /api/project/budget/:id tests success', function (t) {
   t.test('Successful update of project budget', function (st) {
-    const opts = { encoding: 'json', method: 'PUT', headers: { 'Content-Type': 'application/json' } }
     const updatedProject = {
       projectName: 'Updated Project Name',
       year: 2085,
@@ -274,7 +269,7 @@ test('PUT /api/project/budget/:id tests success', function (t) {
       finalBudgetUsd: 247106.75
     }
 
-    const req = servertest(server, '/api/project/budget/20202', opts, function (err, res) {
+    const req = servertest(server, '/api/project/budget/20202', putRequestOpts, function (err, res) {
       st.error(err, 'No error')
       st.equal(res.statusCode, 201, 'Should return 201')
       st.ok(res.body.success, 'Should return success: true')
@@ -325,8 +320,7 @@ test('Setup test database again for 4 projects', async function (t) {
 
 test('POST /api-conversion tests', function (t) {
   t.test('Successful conversion of project budgets to TTD', function (st) {
-    const opts = { encoding: 'json', method: 'GET' }
-    servertest(server, '/api-conversion', opts, function (err, res) {
+    servertest(server, '/api-conversion', getRequestOpts, function (err, res) {
       st.error(err, 'No error')
       st.equal(res.statusCode, 200, 'Should return 200')
       st.ok(res.body.success, 'Should return success: true')
