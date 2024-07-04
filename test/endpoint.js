@@ -302,3 +302,56 @@ test('Teardown test database', async function (t) {
     t.end()
   }
 })
+
+test('Setup test database again for 4 projects', async function (t) {
+  const testDataForTtdApi = [
+    [38, 'Llapingacho Instagram', 2000, 'GBP', 781688.85, 402319.77, 19, 21, 3.09, 4.96, 435323.12],
+    [321, 'Peking roasted duck Chanel', 2000, 'GBP', 767063.85, 621610.48, 21, 19, 7.14, 3.58, 689836.03],
+    [504, 'Choucroute Cartier', 2000, 'GBP', 848895.86, 720265.74, 23, 21, 0.93, 2.88, 747900.78],
+    [184, 'Rigua Nintendo', 2001, 'GBP', 448429.37, 253943.51, 14, 12, 5.92, 3.04, 277153.87]
+  ]
+  try {
+    await db.executeQuery(createTableSql, [])
+    for (let i = 0; i < testDataForTtdApi.length; i++) {
+      await db.executeQuery(insertSql, testDataForTtdApi[i])
+      t.pass(`Data inserted for record ${i + 1}`)
+    }
+    t.end()
+  } catch (err) {
+    t.fail('Error creating table and inserting data')
+    t.end()
+  }
+})
+
+test('POST /api-conversion tests', function (t) {
+  t.test('Successful conversion of project budgets to TTD', function (st) {
+    const opts = { encoding: 'json', method: 'GET' }
+    servertest(server, '/api-conversion', opts, function (err, res) {
+      st.error(err, 'No error')
+      st.equal(res.statusCode, 200, 'Should return 200')
+      st.ok(res.body.success, 'Should return success: true')
+      st.equal(res.body.data.length, 4, 'Should return four projects')
+      res.body.data.forEach(project => {
+        st.ok(project.finalBudgetTtd, 'Should have finalBudgetTtd field')
+      })
+      st.end()
+    })
+  })
+})
+
+test('Teardown test database', async function (t) {
+  const dropTableSql = 'DROP TABLE project'
+  try {
+    db.executeQuery(dropTableSql, [], (err) => {
+      if (err) {
+        t.fail('Error dropping table')
+        t.end()
+      }
+    })
+    t.pass('Table dropped')
+    t.end()
+  } catch (err) {
+    t.fail('Error dropping table')
+    t.end()
+  }
+})
