@@ -170,6 +170,64 @@ test('POST /api/project/budget/currency tests NotFound', function (t) {
   t.end()
 })
 
+test('POST /api/project/budget tests with validation error', function (t) {
+  t.test('Dto Validation Error', function (st) {
+    const opts = { encoding: 'json', method: 'POST', headers: { 'Content-Type': 'application/json' } }
+    const invalidData = {
+      projectName: 'New Project 3',
+      year: 'kebe',
+      currency: 'USD',
+      initialBudgetLocal: 12340.50,
+      budgetUsd: 139.24,
+      initialScheduleEstimateMonths: 20,
+      adjustedScheduleEstimateMonths: 11,
+      contingencyRate: 3,
+      escalationRate: 4,
+      finalBudgetUsd: 405.01
+    }
+
+    const req = servertest(server, '/api/project/budget', opts, function (err, res) {
+      st.error(err, 'No error')
+      st.equal(res.statusCode, 400, 'Should return 400')
+      st.equal(res.body.errors.length, 2, 'Should return 2 errors')
+      st.end()
+    })
+
+    req.write(JSON.stringify(invalidData))
+    req.end()
+  })
+  t.end()
+})
+
+test('POST /api/project/budget tests success', function (t) {
+  t.test('Successful addition of project budget', function (st) {
+    const opts = { encoding: 'json', method: 'POST', headers: { 'Content-Type': 'application/json' } }
+    const newProject =
+    {
+      projectId: 20202,
+      projectName: 'Humitas Hewlett Packard',
+      year: 2005,
+      currency: 'EUR',
+      initialBudgetLocal: 316974.5,
+      budgetUsd: 233724.23,
+      initialScheduleEstimateMonths: 13,
+      adjustedScheduleEstimateMonths: 12,
+      contingencyRate: 2.19,
+      escalationRate: 3.46,
+      finalBudgetUsd: 247106.75
+    }
+    const req = servertest(server, '/api/project/budget', opts, function (err, res) {
+      st.error(err, 'No error')
+      st.equal(res.statusCode, 201, 'Should return 201')
+      st.ok(res.body.success, 'Should return success: true')
+      st.end()
+    })
+    req.write(JSON.stringify(newProject))
+    req.end()
+  })
+  t.end()
+})
+
 test('Teardown test database', async function (t) {
   const dropTableSql = 'DROP TABLE project'
   try {
