@@ -24,7 +24,8 @@
     "healthpoint": "^1.0.0",
     "mysql": "^2.18.1",
     "productionize": "^5.0.0",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "validator": "^13.12.0"
   },
   "devDependencies": {
     "depcheck": "^1.4.7",
