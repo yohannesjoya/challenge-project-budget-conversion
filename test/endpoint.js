@@ -167,7 +167,7 @@ test('POST /api/project/budget/currency tests with Non-USD',
             st.ok(res.body.success, 'Should return success: true')
             st.equal(res.body.data[0].projectName, 'New Project 2',
               'name match')
-            st.ok(res.body.data[0].finalBudgetEUR,
+            st.ok(res.body.data[0].finalBudgetEur,
               'have finalBudgetEUR: field')
             st.end()
           })
